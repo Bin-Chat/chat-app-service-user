@@ -16,6 +16,15 @@ export class UserProfile {
   @Column({ nullable: true })
   avatar: string;
 
+  @Column({ nullable: true, type: 'varchar', length: 20 })
+  phone: string | null;
+
+  @Column({ nullable: true, type: 'text' })
+  bio: string | null;
+
+  @Column({ type: 'varchar', length: 20, default: 'user' })
+  role: string;
+
   @Column({ default: true })
   isActive: boolean;
 

@@ -1,8 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, In } from 'typeorm';
 
-import { UserRegisteredEvent, UserProfileUpdatedEvent } from '../kafka/events/user.events';
+import {
+  UserRegisteredEvent,
+  UserProfileUpdatedEvent,
+  AvatarDeletedEvent,
+  USER_EVENTS,
+} from '../kafka/events/user.events';
+import { KafkaProducerService } from '../kafka/kafka-producer.service';
 
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserProfile } from './entities/user-profile.entity';
@@ -11,7 +17,8 @@ import { UserProfile } from './entities/user-profile.entity';
 export class UserService {
   constructor(
     @InjectRepository(UserProfile)
-    private profileRepo: Repository<UserProfile>
+    private profileRepo: Repository<UserProfile>,
+    private kafkaProducer: KafkaProducerService
   ) {}
 
   // ── Kafka event handlers ──────────────────────────────────────────────────
@@ -24,6 +31,7 @@ export class UserService {
       id: event.id,
       email: event.email,
       fullName: event.fullName,
+      role: event.role ?? 'user',
       createdAt: new Date(event.createdAt),
     });
     await this.profileRepo.save(profile);
@@ -50,6 +58,14 @@ export class UserService {
     return profile;
   }
 
+  async findByIds(ids: string[]): Promise<UserProfile[]> {
+    if (!ids.length) return [];
+    return this.profileRepo.find({
+      where: { id: In(ids) },
+      select: ['id', 'fullName', 'avatar'],
+    });
+  }
+
   async searchByName(name: string): Promise<UserProfile[]> {
     if (!name.trim()) return [];
     return this.profileRepo.find({
@@ -59,9 +75,33 @@ export class UserService {
   }
 
   async updateProfile(id: string, dto: UpdateProfileDto): Promise<UserProfile> {
-    const profile = await this.findById(id);
-    Object.assign(profile, dto);
-    return this.profileRepo.save(profile);
+    let profile = await this.profileRepo.findOne({ where: { id } });
+
+    // Ghi nhớ avatar cũ trước khi overwrite
+    const oldAvatarUrl = profile?.avatar ?? null;
+
+    if (!profile) {
+      profile = this.profileRepo.create({ id, ...dto });
+    } else {
+      Object.assign(profile, dto);
+    }
+    const saved = await this.profileRepo.save(profile);
+
+    await this.kafkaProducer.emit(USER_EVENTS.PROFILE_UPDATED, {
+      id: saved.id,
+      fullName: saved.fullName,
+      avatar: saved.avatar,
+      updatedAt: saved.updatedAt,
+    });
+
+    // Nếu avatar thay đổi sang giá trị mới (khác rỗng), xóa ảnh cũ
+    const newAvatarUrl = saved.avatar ?? null;
+    if (oldAvatarUrl && oldAvatarUrl !== newAvatarUrl) {
+      const deleteEvent: AvatarDeletedEvent = { oldAvatarUrl };
+      await this.kafkaProducer.emit(USER_EVENTS.AVATAR_DELETED, deleteEvent);
+    }
+
+    return saved;
   }
 
   async findAll(skip = 0, take = 50): Promise<UserProfile[]> {

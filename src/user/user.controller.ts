@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Param,
   Body,
@@ -30,6 +31,12 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   search(@Query('name') name: string) {
     return this.userService.searchByName(name || '');
+  }
+
+  @Post('batch')
+  @UseGuards(JwtAuthGuard)
+  findByIds(@Body('userIds') userIds: string[]) {
+    return this.userService.findByIds(userIds ?? []);
   }
 
   @Get('email/:email')
