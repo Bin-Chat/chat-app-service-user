@@ -11,6 +11,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 
+import { InternalGuard } from '../auth/internal.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles, UserRole } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -36,6 +37,13 @@ export class UserController {
   @Post('batch')
   @UseGuards(JwtAuthGuard)
   findByIds(@Body('userIds') userIds: string[]) {
+    return this.userService.findByIds(userIds ?? []);
+  }
+
+  /** Internal endpoint — called by other microservices (no JWT, uses x-service-secret) */
+  @Post('internal/batch')
+  @UseGuards(InternalGuard)
+  findByIdsInternal(@Body('userIds') userIds: string[]) {
     return this.userService.findByIds(userIds ?? []);
   }
 
