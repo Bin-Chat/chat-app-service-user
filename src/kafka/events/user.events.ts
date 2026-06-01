@@ -35,6 +35,6 @@ export interface UserStatusUpdatedEvent {
 }
 
 export interface AvatarDeletedEvent {
-  /** Full CloudFront CDN URL của ảnh cũ cần xóa */
+  // URL CDN CloudFront day du cua file cu can xoa.
   oldAvatarUrl: string;
 }

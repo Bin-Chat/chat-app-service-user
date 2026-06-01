@@ -6,6 +6,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  // Khoi tao lop va nhan cac dependency can thiet qua dependency injection de xu ly nghiep vu.
   constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -16,6 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  // Xac thuc payload/token da duoc giai ma, kiem tra nguoi dung hoac phien dang nhap va tra du lieu gan vao request.
   async validate(payload: any) {
     return {
       sub: payload.sub,

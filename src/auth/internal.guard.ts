@@ -7,19 +7,19 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-/**
- * Guards endpoints called by other microservices (e.g., AI agent).
- * Requires a shared secret in the `x-service-secret` header.
- */
+// Bao ve endpoint noi bo duoc cac microservice khac goi, vi du AI agent.
+// Requires a shared secret in the `x-service-secret` header.
 @Injectable()
 export class InternalGuard implements CanActivate {
   private readonly logger = new Logger(InternalGuard.name);
   private readonly secret: string;
 
+  // Khoi tao lop va nhan cac dependency can thiet qua dependency injection de xu ly nghiep vu.
   constructor(config: ConfigService) {
     this.secret = config.get<string>('INTERNAL_SERVICE_SECRET', 'internal-secret');
   }
 
+  // Kiem tra request co du quyen di tiep hay khong; tra true neu hop le va nem loi khi bi tu choi.
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
     const provided = req.headers['x-service-secret'];

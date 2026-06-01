@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
 
+// Khoi dong NestJS service, nap middleware/cau hinh global va mo cong de container nhan request.
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
