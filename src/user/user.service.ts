@@ -5,6 +5,8 @@ import { Repository, Like, In } from 'typeorm';
 import {
   UserRegisteredEvent,
   UserProfileUpdatedEvent,
+  UserRoleUpdatedEvent,
+  UserStatusUpdatedEvent,
   AvatarDeletedEvent,
   USER_EVENTS,
 } from '../kafka/events/user.events';
@@ -42,6 +44,14 @@ export class UserService {
       fullName: event.fullName,
       avatar: event.avatar,
     });
+  }
+
+  async updateRoleFromEvent(event: UserRoleUpdatedEvent): Promise<void> {
+    await this.profileRepo.update(event.id, { role: event.role });
+  }
+
+  async updateStatusFromEvent(event: UserStatusUpdatedEvent): Promise<void> {
+    await this.profileRepo.update(event.id, { isActive: event.isActive });
   }
 
   // ── REST endpoints ────────────────────────────────────────────────────────

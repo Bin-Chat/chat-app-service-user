@@ -3,7 +3,13 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 
 import { UserService } from '../user/user.service';
 
-import { USER_EVENTS, UserRegisteredEvent, UserProfileUpdatedEvent } from './events/user.events';
+import {
+  USER_EVENTS,
+  UserRegisteredEvent,
+  UserProfileUpdatedEvent,
+  UserRoleUpdatedEvent,
+  UserStatusUpdatedEvent,
+} from './events/user.events';
 
 @Controller()
 export class UserEventsConsumer {
@@ -21,5 +27,17 @@ export class UserEventsConsumer {
   async handleUserProfileUpdated(@Payload() event: UserProfileUpdatedEvent) {
     this.logger.log(`[user.profile_updated] userId=${event.id}`);
     await this.userService.updateFromEvent(event);
+  }
+
+  @EventPattern(USER_EVENTS.ROLE_UPDATED)
+  async handleUserRoleUpdated(@Payload() event: UserRoleUpdatedEvent) {
+    this.logger.log(`[user.role_updated] userId=${event.id} role=${event.role}`);
+    await this.userService.updateRoleFromEvent(event);
+  }
+
+  @EventPattern(USER_EVENTS.STATUS_UPDATED)
+  async handleUserStatusUpdated(@Payload() event: UserStatusUpdatedEvent) {
+    this.logger.log(`[user.status_updated] userId=${event.id} isActive=${event.isActive}`);
+    await this.userService.updateStatusFromEvent(event);
   }
 }

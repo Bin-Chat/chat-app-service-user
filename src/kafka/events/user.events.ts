@@ -4,6 +4,8 @@
 export const USER_EVENTS = {
   REGISTERED: 'user.registered',
   PROFILE_UPDATED: 'user.profile_updated',
+  ROLE_UPDATED: 'user.role_updated',
+  STATUS_UPDATED: 'user.status_updated',
   AVATAR_DELETED: 'upload.avatar_deleted',
 };
 
@@ -20,6 +22,16 @@ export interface UserProfileUpdatedEvent {
   fullName: string | null;
   avatar: string | null;
   updatedAt: Date;
+}
+
+export interface UserRoleUpdatedEvent {
+  id: string;
+  role: string;
+}
+
+export interface UserStatusUpdatedEvent {
+  id: string;
+  isActive: boolean;
 }
 
 export interface AvatarDeletedEvent {
